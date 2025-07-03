@@ -1,1 +1,65 @@
-{ "dashboard": { "title": "Medicure Metrics" } }
+{
+  "dashboard": {
+    "id": null,
+    "title": "Medicure Monitoring Dashboard",
+    "timezone": "browser",
+    "schemaVersion": 30,
+    "version": 1,
+    "editable": true,
+    "panels": [
+      {
+        "type": "graph",
+        "title": "HTTP Requests",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_count[1m])",
+            "legendFormat": "{{method}} {{uri}}",
+            "interval": ""
+          }
+        ],
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 }
+      },
+      {
+        "type": "graph",
+        "title": "JVM Memory Usage",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{area=\"heap\"}",
+            "legendFormat": "Heap - {{id}}",
+            "interval": ""
+          },
+          {
+            "expr": "jvm_memory_used_bytes{area=\"nonheap\"}",
+            "legendFormat": "Non-Heap - {{id}}",
+            "interval": ""
+          }
+        ],
+        "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 }
+      },
+      {
+        "type": "stat",
+        "title": "Live Threads",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "jvm_threads_live_threads",
+            "legendFormat": "",
+            "interval": ""
+          }
+        ],
+        "gridPos": { "x": 0, "y": 8, "w": 6, "h": 4 }
+      },
+      {
+        "type": "stat",
+        "title": "GC Pause Time",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "rate(jvm_gc_pause_seconds_sum[5m])",
+            "legendFormat": "",
+            "interval": ""
+          }
+        ],
+        "gridPos": { "x": 6,
