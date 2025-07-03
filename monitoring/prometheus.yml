@@ -1,0 +1,3 @@
+scrape_configs:
+  - job_name: 'medicure-app'
+    static_configs: [{ targets: ['localhost:8080'] }]
