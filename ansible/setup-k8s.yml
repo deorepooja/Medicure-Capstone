@@ -1,3 +1,34 @@
-- hosts: k8s_nodes
+---
+- name: Deploy Medicure Microservice on EC2
+  hosts: medicure_nodes
+  become: yes
+
   tasks:
-    - name: Setup Kubernetes
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Enable and start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Pull Medicure Docker image from DockerHub
+      docker_image:
+        name: deorepooja/medicure-app
+        source: pull
+
+    - name: Run Medicure container
+      docker_container:
+        name: medicure-app
+        image: deorepooja/medicure-app
+        state: started
+        restart_policy: always
+        ports:
+          - "8081:8080"
