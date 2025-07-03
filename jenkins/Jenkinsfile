@@ -1,1 +1,80 @@
-pipeline { agent any ... Kubernetes deployment stages ... }
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-cred') // Jenkins credential ID
+        DOCKER_IMAGE = "deorepooja/medicure-app"
+        KUBE_CONFIG = credentials('kubeconfig') // Optional: Kubernetes config
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/deorepooja/Medicure-Capstone.git', branch: 'main'
+            }
+        }
+
+        stage('Build with Maven') {
+            steps {
+                sh 'mvn clean install'
+            }
+        }
+
+        stage('Run JUnit Tests') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t $DOCKER_IMAGE ."
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withDockerRegistry([credentialsId: "$DOCKERHUB_CREDENTIALS", url: '']) {
+                    sh "docker push $DOCKER_IMAGE"
+                }
+            }
+        }
+
+        stage('Deploy to Test (Kubernetes)') {
+            steps {
+                sh 'kubectl apply -f k8s/test-deployment.yaml'
+            }
+        }
+
+        stage('Run Selenium Tests') {
+            steps {
+                echo "Running Selenium Tests..."
+                sh 'mvn test -Dtest=SeleniumTest'
+            }
+        }
+
+        stage('Deploy to Production (Kubernetes)') {
+            when {
+                expression {
+                    currentBuild.currentResult == 'SUCCESS'
+                }
+            }
+            steps {
+                sh 'kubectl apply -f k8s/prod-deployment.yaml'
+            }
+        }
+    }
+
+    post {
+        always {
+            junit '**/target/surefire-reports/*.xml'
+        }
+        failure {
+            echo "Build failed. Check logs and reports."
+        }
+        success {
+            echo "Build and deployments completed successfully!"
+        }
+    }
+}
